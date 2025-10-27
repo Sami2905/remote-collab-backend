@@ -1,0 +1,16 @@
+{
+  "name": "remote-collab-frontend",
+  "version": "1.0.0",
+  "description": "Frontend applications for Remote Work Collaboration Suite",
+  "private": true,
+  "packageManager": "pnpm",
+  "scripts": {
+    "dev": "pnpm --filter './apps/*' --parallel run dev",
+    "build": "pnpm --filter './apps/*' run build",
+    "preview": "pnpm --filter './apps/*' run preview"
+  },
+  "keywords": ["collaboration", "frontend", "react", "websocket"],
+  "author": "",
+  "license": "MIT"
+}
+
