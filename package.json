@@ -1,0 +1,17 @@
+{
+  "name": "remote-collab-backend",
+  "version": "1.0.0",
+  "description": "Backend API and server services for Remote Work Collaboration Suite",
+  "private": true,
+  "packageManager": "pnpm",
+  "scripts": {
+    "dev": "pnpm --filter './apps/*' --parallel run dev",
+    "build": "pnpm --filter './apps/*' --filter './packages/*' run build",
+    "prisma:generate": "cd apps/api && pnpm prisma:generate",
+    "prisma:migrate": "cd apps/api && pnpm prisma:migrate"
+  },
+  "keywords": ["collaboration", "backend", "api", "websocket"],
+  "author": "",
+  "license": "MIT"
+}
+

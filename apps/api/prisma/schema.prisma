@@ -1,0 +1,125 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String       @id @default(cuid())
+  email       String       @unique
+  name        String?
+  imageUrl    String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  memberships Membership[]
+  messages    Message[]
+  assignedTasks Task[]     @relation("TaskAssignee")
+}
+
+model Workspace {
+  id         String      @id @default(cuid())
+  name       String
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  members    Membership[]
+  documents  Document[]
+  boards     Board[]
+  messages   Message[]
+}
+
+model Membership {
+  id           String     @id @default(cuid())
+  role         String
+  userId       String
+  workspaceId  String
+  user         User       @relation(fields: [userId], references: [id])
+  workspace    Workspace  @relation(fields: [workspaceId], references: [id])
+
+  @@unique([userId, workspaceId])
+  @@index([workspaceId, userId], name: "idx_membership_ws_user")
+}
+
+model Document {
+  id           String    @id @default(cuid())
+  title        String
+  workspaceId  String
+  ydocSnapshot Json?
+  updatedAt    DateTime  @updatedAt
+  workspace    Workspace @relation(fields: [workspaceId], references: [id])
+  snapshots    DocumentSnapshot[]
+  state        DocumentState?
+}
+
+model Board {
+  id           String    @id @default(cuid())
+  name         String
+  workspaceId  String
+  columns      Column[]
+  workspace    Workspace @relation(fields: [workspaceId], references: [id])
+}
+
+model Column {
+  id        String  @id @default(cuid())
+  title     String
+  order     Int
+  boardId   String
+  tasks     Task[]
+  board     Board   @relation(fields: [boardId], references: [id])
+}
+
+model Task {
+  id          String  @id @default(cuid())
+  title       String
+  description String?
+  order       Int
+  columnId    String
+  assigneeId  String?
+  column      Column  @relation(fields: [columnId], references: [id])
+  assignee    User?   @relation("TaskAssignee", fields: [assigneeId], references: [id])
+
+  @@index([columnId, order], name: "idx_task_column_order")
+}
+
+model Message {
+  id           String    @id @default(cuid())
+  content      String
+  userId       String
+  workspaceId  String
+  createdAt    DateTime  @default(now())
+  user         User      @relation(fields: [userId], references: [id])
+  workspace    Workspace @relation(fields: [workspaceId], references: [id])
+
+  @@index([workspaceId, createdAt], name: "idx_message_workspace_created")
+}
+
+model DocumentSnapshot {
+  id         String   @id @default(cuid())
+  documentId String
+  createdAt  DateTime @default(now())
+  // Raw Yjs update bytes encoded as Postgres bytea
+  state      Bytes
+
+  document   Document @relation(fields: [documentId], references: [id])
+
+  @@index([documentId, createdAt], name: "idx_snapshot_document_created")
+}
+
+model DocumentState {
+  documentId String  @id
+  update     Bytes   // merged Yjs update representing latest state
+  size       Int
+  updatedAt  DateTime @updatedAt
+
+  document   Document @relation(fields: [documentId], references: [id])
+
+  @@index([updatedAt], name: "idx_document_state_updated")
+}
